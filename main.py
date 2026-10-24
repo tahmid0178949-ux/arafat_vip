@@ -1,37 +1,42 @@
-import telebot, random, string, os
+import os, random, string, threading
 from flask import Flask
-from threading import Thread
-import time
+import telebot
 
-TOKEN = os.environ.get("BOT_TOKEN", "8832090946:AAGjLlbNE-ORqNrRU")
+TOKEN = os.environ.get("BOT_TOKEN", "YOUR_BOT_TOKEN")
 bot = telebot.TeleBot(TOKEN)
-app = Flask('')
-keys = {}
+app = Flask(__name__)
 
 @app.route('/')
-def home(): return "ARAFAT VAI VIP LIVE"
+def home():
+    return "Bot is Live!"
 
-def run(): app.run(host='0.0.0.0', port=8080)
-Thread(target=run).start()
+def gen_key(days):
+    if days == "lifetime":
+        code = ''.join(random.choices(string.ascii_uppercase + string.digits, k=8))
+        return f"VIPLIFE-{code}"
+    else:
+        code = ''.join(random.choices(string.ascii_uppercase + string.digits, k=8))
+        return f"VIP7-{code}"
 
-@bot.message_handler(commands=['signal','start'])
+@bot.message_handler(commands=['signal'])
 def signal(m):
-    n = random.randint(0,9)
-    s = "BIG" if n>=5 else "SMALL"
-    bot.reply_to(m, f"🔥 ARAFAT VAI VIP 🔥\n\nNumber: {n}\nSIGNAL: {s}\nAccuracy: 99%\n\nOwner: @ARAFAT_VAI_D")
+    num = random.randint(1, 6)
+    sig = "BIG" if num > 3 else "SMALL"
+    bot.reply_to(m, f"🔥 ARAFAT VAI VIP SINGNAL 🔥\n\n🎲 Number: {num}\n👉 SIGNAL: {sig} 🔴\n\n⏰ Time: LIVE\n🎯 Accuracy: 99%\n📊 Mode: APEX\n\n👑 OWNER: @ARAFAT_VAI_D")
 
 @bot.message_handler(commands=['genkey'])
-def genkey(m):
-    txt = m.text.lower()
-    days = 9999 if "life" in txt else 7
-    pre = "VIPLIFE" if days>7 else "VIP7"
-    code = ''.join(random.choices(string.ascii_uppercase+string.digits,k=7))
-    key = f"{pre}-{code}"
-    keys[key]=days
-    bot.reply_to(m, f"✅ {days} দিনের Key:\n\n{key}")
-
-while True:
+def gk(m):
     try:
-        bot.infinity_polling(none_stop=True, timeout=60)
+        arg = m.text.split()[1] if len(m.text.split()) > 1 else "7"
+        if arg.lower() == "lifetime":
+            key = gen_key("lifetime")
+            bot.reply_to(m, f"✅ Lifetime Key তৈরি হয়েছে:\n\n{key}\n\nএটা কাউকে দাও, সে /redeem করলে Lifetime VIP পাবে।")
+        else:
+            key = gen_key(7)
+            bot.reply_to(m, f"✅ ৭ দিনের নতুন Key তৈরি হয়েছে:\n\n{key}\n\nএটা কাউকে দাও, সে /redeem করলে ৭ দিন VIP পাবে।")
     except:
-        time.sleep(5)
+        key = gen_key(7)
+        bot.reply_to(m, f"✅ ৭ দিনের নতুন Key:\n\n{key}")
+
+threading.Thread(target=lambda: app.run(host="0.0.0.0", port=10000)).start()
+bot.infinity_polling()
